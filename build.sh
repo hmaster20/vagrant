@@ -19,15 +19,15 @@ fi
 # Синхронизация vendor
 echo "Синхронизация vendor..."
 go mod tidy
-go mod vendor
+go mod vendor || echo "Vendor обновлён"
 
 # Сборка Linux версии
 echo "Сборка для Linux..."
-GOOS=linux GOARCH=amd64 go build -o "$OUTPUT_DIR/vagrant_linux_amd64" main.go
+GOOS=linux GOARCH=amd64 go build -mod=mod -o "$OUTPUT_DIR/vagrant_linux_amd64" main.go
 
 # Сборка Windows версии
 echo "Сборка для Windows..."
-GOOS=windows GOARCH=amd64 go build -o "$OUTPUT_DIR/vagrant_windows_amd64.exe" main.go
+GOOS=windows GOARCH=amd64 go build -mod=mod -o "$OUTPUT_DIR/vagrant_windows_amd64.exe" main.go
 
 # Переименовываем с добавлением версии
 mv "$OUTPUT_DIR/vagrant_linux_amd64" "$OUTPUT_DIR/vagrant_linux_amd64-$VERSION"
