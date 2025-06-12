@@ -33,7 +33,12 @@ GOOS=windows GOARCH=amd64 go build -mod=mod -o "$OUTPUT_DIR/vagrant_windows_amd6
 mv "$OUTPUT_DIR/vagrant_linux_amd64" "$OUTPUT_DIR/vagrant_linux_amd64-$VERSION"
 mv "$OUTPUT_DIR/vagrant_windows_amd64.exe" "$OUTPUT_DIR/vagrant_windows_amd64-$VERSION.exe"
 
-# Создание .gem файла (используем Rake)
+# Установка зависимостей через bundle
+echo "Установка Ruby-зависимостей..."
+bundle config set --local path 'vendor/bundle'
+bundle install --retry 3 --jobs 3
+
+# Создание .gem файла
 echo "Создание .gem пакета..."
 bundle exec rake package
 

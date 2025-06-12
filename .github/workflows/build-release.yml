@@ -27,19 +27,10 @@ jobs:
           sudo apt-get install -y git ruby-dev build-essential zlib1g-dev
           gem install bundler --no-document
 
-      - name: Prepare environment
-        run: |
-          bundle config set --local path 'vendor/bundle'
-          bundle install
-
       - name: Run build script
         run: |
           chmod +x build.sh
-          if [[ "${{ github.event_name }}" == "push" ]]; then
-            ./build.sh dev
-          else
-            ./build.sh "${{ github.ref_name }}"
-          fi
+          ./build.sh dev
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
