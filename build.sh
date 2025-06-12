@@ -6,41 +6,26 @@ set -e
 VERSION=${1:-dev}
 
 # Директория для бинарников
-OUTPUT_DIR="../output"
+OUTPUT_DIR="output"
 mkdir -p "$OUTPUT_DIR"
 
-# Переходим в директорию vagrant
-cd vagrant || exit 1
-
-# Устанавливаем bundler и зависимости
-gem install bundler --no-document
-bundle config set --local path 'vendor/bundle'
-bundle install
-
-# Обновляем версию в Gemfile если это не dev
-if [[ "$VERSION" != "dev" ]]; then
-  sed -i "s/\(gem 'vagrant', path: 'vendor\/vagrant'\)/# gem 'vagrant', path: 'vendor\/vagrant'/" ../Gemfile
-  echo "gem 'vagrant', '=$VERSION'" >> ../Gemfile
+# Убедимся, что Go установлен
+if ! command -v go &> /dev/null
+then
+    echo "Go не установлен. Установите Go."
+    exit 1
 fi
 
-# Собираем гем
-bundle exec rake package
+# Сборка Linux версии
+echo "Сборка для Linux..."
+GOOS=linux GOARCH=amd64 go build -o "$OUTPUT_DIR/vagrant_linux_amd64" main.go
 
-# Копируем результат
-GEM_NAME="vagrant-${VERSION}.gem"
-cp pkg/*.gem "$OUTPUT_DIR/"
+# Сборка Windows версии
+echo "Сборка для Windows..."
+GOOS=windows GOARCH=amd64 go build -o "$OUTPUT_DIR/vagrant_windows_amd64.exe" main.go
 
-# Создаём standalone .exe (Windows)
-gem install ocra --no-document
-ocra --output "$OUTPUT_DIR/vagrant_windows_amd64.exe" bin/vagrant
+# Переименовываем с добавлением версии
+mv "$OUTPUT_DIR/vagrant_linux_amd64" "$OUTPUT_DIR/vagrant_linux_amd64-$VERSION"
+mv "$OUTPUT_DIR/vagrant_windows_amd64.exe" "$OUTPUT_DIR/vagrant_windows_amd64-$VERSION.exe"
 
-# Создаём portable Linux версию
-mkdir -p dist/linux
-APP_NAME="vagrant_linux_amd64"
-mkdir -p "$APP_NAME"
-cp bin/vagrant "$APP_NAME/"
-cp -r lib templates "$APP_NAME/"
-
-tar -czf "$OUTPUT_DIR/$APP_NAME.tar.gz" -C "$APP_NAME" .
-
-echo "Сборка завершена. Бинарные файлы сохранены в $OUTPUT_DIR"
+#
