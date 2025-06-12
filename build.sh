@@ -16,6 +16,11 @@ then
     exit 1
 fi
 
+# Синхронизация vendor
+echo "Синхронизация vendor..."
+go mod tidy
+go mod vendor
+
 # Сборка Linux версии
 echo "Сборка для Linux..."
 GOOS=linux GOARCH=amd64 go build -o "$OUTPUT_DIR/vagrant_linux_amd64" main.go
@@ -28,4 +33,12 @@ GOOS=windows GOARCH=amd64 go build -o "$OUTPUT_DIR/vagrant_windows_amd64.exe" ma
 mv "$OUTPUT_DIR/vagrant_linux_amd64" "$OUTPUT_DIR/vagrant_linux_amd64-$VERSION"
 mv "$OUTPUT_DIR/vagrant_windows_amd64.exe" "$OUTPUT_DIR/vagrant_windows_amd64-$VERSION.exe"
 
-#
+# Создание .gem файла (используем Rake)
+echo "Создание .gem пакета..."
+bundle exec rake package
+
+# Копируем гем в output
+GEM_NAME=$(ls pkg/*.gem | head -n 1)
+cp "$GEM_NAME" "$OUTPUT_DIR/${GEM_NAME##*/}-${VERSION}.gem"
+
+echo "Сборка завершена. Бинарные файлы сохранены в $OUTPUT_DIR"
